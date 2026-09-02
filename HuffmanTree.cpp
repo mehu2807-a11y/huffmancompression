@@ -61,8 +61,6 @@ void HuffmanTree::generateCodesHelper(Node* node, const string& code) {
     if (!node) return;
 
     if (node->isLeaf()) {
-        // A file with a single distinct character never recurses past the
-        // internal wrapper node, so 'code' could still be empty here.
         codes[node->ch] = code.empty() ? "0" : code;
         return;
     }
