@@ -2,18 +2,6 @@
 #include "HuffmanTree.h"
 #include "FileHandler.h"
 using namespace std;
-
-/*
- * Compressed file layout ("HUFF" format)
- * ---------------------------------------
- *  4 bytes   magic number         "HUFF"
- *  8 bytes   original file size   (uint64_t, number of bytes before compression)
- *  2 bytes   distinct byte count  (uint16_t, how many unique byte values appear)
- *  N * 9     frequency table      for each distinct byte: 1 byte value + 8 byte count
- *  1 byte    padding bit count    (how many 0-bits were added to pad the last byte)
- *  ...       packed bit stream    the actual Huffman-encoded data, 8 bits per byte
- */
-
 namespace {
     void writeUint64(ofstream& out, uint64_t value) {
         out.write(reinterpret_cast<const char*>(&value), sizeof(value));
@@ -25,16 +13,12 @@ namespace {
 
 void Compressor::compress(const string& inputPath, const string& outputPath) {
     vector<unsigned char> data = FileHandler::readFile(inputPath);
-
-    // Step 1: count frequency of every byte value.
     array<long long, 256> freq{};
     freq.fill(0);
     for (unsigned char c : data) {
         freq[c]++;
     }
 
-    // Step 2: build the Huffman tree (min-heap + greedy merging) and
-    // step 3: generate the binary code for every byte via DFS.
     HuffmanTree tree;
     tree.build(freq);
     tree.generateCodes();
@@ -46,12 +30,8 @@ void Compressor::compress(const string& inputPath, const string& outputPath) {
     for (unsigned char c : data) {
         bitString += codes.at(c);
     }
-
-    // Pad with zero bits so the total length is a multiple of 8.
     int paddingBits = bitString.empty() ? 0 : static_cast<int>((8 - bitString.size() % 8) % 8);
     bitString.append(static_cast<size_t>(paddingBits), '0');
-
-    // Pack the bit string into real bytes.
     vector<unsigned char> packedData;
     packedData.reserve(bitString.size() / 8);
     for (size_t i = 0; i < bitString.size(); i += 8) {
@@ -61,8 +41,6 @@ void Compressor::compress(const string& inputPath, const string& outputPath) {
         }
         packedData.push_back(byte);
     }
-
-    // Step 5: write the header + packed bit stream to disk.
     ofstream out(outputPath, ios::binary);
     if (!out) {
         throw runtime_error("Could not open output file for writing: " + outputPath);
