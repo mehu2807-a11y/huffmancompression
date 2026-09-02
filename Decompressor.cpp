@@ -30,8 +30,6 @@ void Decompressor::decompress(const string& inputPath, const string& outputPath)
 
     uint64_t originalSize = readUint64(in);
     uint16_t distinctCount = readUint16(in);
-
-    // Rebuild the exact same frequency table used at compression time.
     array<long long, 256> freq{};
     freq.fill(0);
     for (int i = 0; i < distinctCount; ++i) {
@@ -55,8 +53,6 @@ void Decompressor::decompress(const string& inputPath, const string& outputPath)
         FileHandler::writeFile(outputPath, output);
         return;
     }
-
-    // Rebuild the identical Huffman tree from the frequency table alone.
     HuffmanTree tree;
     tree.build(freq);
     Node* root = tree.getRoot();
