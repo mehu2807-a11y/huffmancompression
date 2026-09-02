@@ -1,9 +1,5 @@
 #include "HuffmanTree.h"
 using namespace std;
-
-// Comparator for the min-heap: smallest frequency first.
-// The tie-breaker on 'ch' just makes tree construction deterministic
-// when two nodes share the same frequency.
 struct Compare {
     bool operator()(const Node* a, const Node* b) const {
         if (a->freq != b->freq) return a->freq > b->freq;
@@ -32,16 +28,11 @@ void HuffmanTree::build(const array<long long, 256>& freq) {
             minHeap.push(new Node(static_cast<unsigned char>(i), freq[i]));
         }
     }
-
-    // Edge case: empty input -> no tree at all.
     if (minHeap.empty()) {
         root = nullptr;
         return;
     }
 
-    // Edge case: exactly one distinct character in the whole file.
-    // Wrap it in a single internal node so it still gets a valid code ("0")
-    // and decompression can still walk left/right correctly.
     if (minHeap.size() == 1) {
         Node* only = minHeap.top();
         minHeap.pop();
@@ -49,8 +40,6 @@ void HuffmanTree::build(const array<long long, 256>& freq) {
         return;
     }
 
-    // Classic greedy Huffman merge: repeatedly take the two least frequent
-    // nodes and merge them into a new parent node, until one node remains.
     while (minHeap.size() > 1) {
         Node* left = minHeap.top();  minHeap.pop();
         Node* right = minHeap.top(); minHeap.pop();
